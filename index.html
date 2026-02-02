@@ -265,6 +265,46 @@
             to { transform: rotate(360deg); }
         }
 
+        .season-stats {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            border: 2px solid rgba(253, 185, 19, 0.3);
+        }
+
+        .season-stats h3 {
+            color: #FDB913;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(253, 185, 19, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FDB913;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
         .next-matches {
             margin-top: 50px;
             padding: 30px;
@@ -303,6 +343,74 @@
             background: rgba(0, 178, 255, 0.2);
         }
 
+        .match-item.cup {
+            border-left-color: #9C27B0;
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .match-item.cup:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .past-results {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 2px solid rgba(253, 185, 19, 0.3);
+        }
+
+        .past-results h3 {
+            color: #FDB913;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-teams {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .result-score {
+            font-size: 1.3em;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 8px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .result-win {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .result-draw {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+        }
+
+        .result-loss {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        .result-date {
+            color: #aaa;
+            font-size: 0.9em;
+            min-width: 100px;
+            text-align: right;
+        }
+
         @media (max-width: 768px) {
             .countdown {
                 grid-template-columns: repeat(2, 1fr);
@@ -332,6 +440,10 @@
             .match-details {
                 font-size: 1.2em;
             }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
     </style>
 </head>
@@ -341,16 +453,18 @@
     <div class="container">
         <div class="header">
             <div class="logo-container">
-               
                 <div class="stars">⭐⭐⭐⭐⭐</div>
                 <div class="player-icon">🦁</div>
             </div>
-      
         </div>
         
         <div id="content"></div>
 
+        <div class="season-stats" id="seasonStats"></div>
+
         <div class="next-matches" id="nextMatches"></div>
+
+        <div class="past-results" id="pastResults"></div>
     </div>
 
     <script>
@@ -367,41 +481,150 @@
             }
         }
 
-        const matches = [
-            { date: "2025-10-22 19:45", opponent: "Bodo/Glimt", home: true, competition: "ŞMP" },
-            { date: "2025-10-26 17:00", opponent: "Göztepe", home: true, competition: "TSL" },
-            { date: "2025-11-01 20:00", opponent: "Trabzonspor", home: true, competition: "TSL" },
-            { date: "2025-11-05 23:00", opponent: "Ajax", home: false, competition: "ŞMP" },
-            { date: "2025-11-09 19:00", opponent: "Kocaelispor", home: false, competition: "TSL" },
-            { date: "2025-11-22 19:00", opponent: "Gençlerbirliği", home: true, competition: "TSL" },
-            { date: "2025-11-25 22:00", opponent: "US Gilloise", home: true, competition: "ŞMP" },
-            { date: "2025-12-01 19:00", opponent: "Fenerbahçe", home: false, competition: "TSL" },
-            { date: "2025-12-05 19:00", opponent: "Samsunspor", home: true, competition: "TSL" },
-            { date: "2025-12-09 22:00", opponent: "Monaco", home: false, competition: "ŞMP" },
-            { date: "2025-12-13 20:00", opponent: "Antalyaspor", home: false, competition: "TSL" },
-            { date: "2025-12-21 19:00", opponent: "Kasımpaşa", home: true, competition: "TSL" },
-            { date: "2026-01-18 19:00", opponent: "Gaziantep FK", home: true, competition: "TSL" },
-            { date: "2026-01-21 22:00", opponent: "Atletico Madrid", home: true, competition: "ŞMP" },
-            { date: "2026-01-25 19:00", opponent: "Karagümrük", home: false, competition: "TSL" },
-            { date: "2026-01-28 22:00", opponent: "Man City", home: false, competition: "ŞMP" }
+        // Tüm maçlar (oynananlar ve oynanacaklar)
+        const allMatches = [
+            // Hazırlık Maçları
+            { date: "2025-07-12 19:00", opponent: "Ümraniyespor", home: false, competition: "HAZ", score: "2-5", result: "W", htScore: "1-2" },
+            { date: "2025-07-20 19:00", opponent: "A.Wacker", home: true, competition: "HAZ", score: "2-1", result: "W", htScore: "1-0" },
+            { date: "2025-07-23 19:00", opponent: "Cagliari", home: true, competition: "HAZ", score: "3-1", result: "W", htScore: "2-1" },
+            { date: "2025-07-26 19:00", opponent: "Strasbourg", home: true, competition: "HAZ", score: "3-1", result: "W", htScore: "1-0" },
+            { date: "2025-08-02 19:00", opponent: "Lazio", home: true, competition: "HAZ", score: "2-2", result: "D", htScore: "1-2" },
+            
+            // Süper Lig & Şampiyonlar Ligi & Kupa
+            { date: "2025-08-08 19:00", opponent: "Gaziantep FK", home: false, competition: "TSL", score: "0-3", result: "W", htScore: "0-3" },
+            { date: "2025-08-15 19:00", opponent: "Karagümrük", home: true, competition: "TSL", score: "3-0", result: "W", htScore: "1-0" },
+            { date: "2025-08-24 19:00", opponent: "Kayserispor", home: false, competition: "TSL", score: "0-4", result: "W", htScore: "0-1" },
+            { date: "2025-08-30 19:00", opponent: "Çaykur Rizespor", home: true, competition: "TSL", score: "3-1", result: "W", htScore: "1-0" },
+            { date: "2025-09-13 19:00", opponent: "Eyüpspor", home: false, competition: "TSL", score: "0-2", result: "W", htScore: "0-0" },
+            { date: "2025-09-18 22:00", opponent: "E.Frankfurt", home: false, competition: "ŞMP", score: "5-1", result: "L", htScore: "3-1" },
+            { date: "2025-09-22 19:00", opponent: "Konyaspor", home: true, competition: "TSL", score: "3-1", result: "W", htScore: "2-0" },
+            { date: "2025-09-26 19:00", opponent: "Alanyaspor", home: false, competition: "TSL", score: "0-1", result: "W", htScore: "0-1" },
+            { date: "2025-09-30 22:00", opponent: "Liverpool", home: true, competition: "ŞMP", score: "1-0", result: "W", htScore: "1-0" },
+            { date: "2025-10-04 19:00", opponent: "Beşiktaş", home: true, competition: "TSL", score: "1-1", result: "D", htScore: "0-1" },
+            { date: "2025-10-18 19:00", opponent: "Başakşehir", home: false, competition: "TSL", score: "1-2", result: "W", htScore: "0-1" },
+            { date: "2025-10-22 19:45", opponent: "Bodo/Glimt", home: true, competition: "ŞMP", score: "3-1", result: "W", htScore: "2-0" },
+            { date: "2025-10-26 17:00", opponent: "Göztepe", home: true, competition: "TSL", score: "3-1", result: "W", htScore: "1-1" },
+            { date: "2025-11-01 20:00", opponent: "Trabzonspor", home: true, competition: "TSL", score: "0-0", result: "D", htScore: "0-0" },
+            { date: "2025-11-05 23:00", opponent: "Ajax", home: false, competition: "ŞMP", score: "0-3", result: "W", htScore: "0-0" },
+            { date: "2025-11-09 19:00", opponent: "Kocaelispor", home: false, competition: "TSL", score: "1-0", result: "L", htScore: "1-0" },
+            { date: "2025-11-22 19:00", opponent: "Gençlerbirliği", home: true, competition: "TSL", score: "3-2", result: "W", htScore: "0-1" },
+            { date: "2025-11-25 22:00", opponent: "US Gilloise", home: true, competition: "ŞMP", score: "0-1", result: "L", htScore: "0-0" },
+            { date: "2025-12-01 19:00", opponent: "Fenerbahçe", home: false, competition: "TSL", score: "1-1", result: "D", htScore: "0-1" },
+            { date: "2025-12-05 19:00", opponent: "Samsunspor", home: true, competition: "TSL", score: "3-2", result: "W", htScore: "2-0" },
+            { date: "2025-12-09 22:00", opponent: "Monaco", home: false, competition: "ŞMP", score: "1-0", result: "L", htScore: "0-0" },
+            { date: "2025-12-13 20:00", opponent: "Antalyaspor", home: false, competition: "TSL", score: "1-4", result: "W", htScore: "0-2" },
+            { date: "2025-12-18 20:00", opponent: "Başakşehir", home: true, competition: "TÜK", score: "1-0", result: "W", htScore: "1-0" },
+            { date: "2025-12-21 19:00", opponent: "Kasımpaşa", home: true, competition: "TSL", score: "3-0", result: "W", htScore: "1-0" },
+            { date: "2026-01-05 20:00", opponent: "Trabzonspor", home: true, competition: "TSK", score: "4-1", result: "W", htScore: "2-0" },
+            { date: "2026-01-10 20:00", opponent: "Fenerbahçe", home: true, competition: "TSK", score: "0-2", result: "L", htScore: "0-1" },
+            { date: "2026-01-13 20:00", opponent: "Fethiyespor", home: false, competition: "TÜK", score: "1-2", result: "W", htScore: "0-0" },
+            { date: "2026-01-17 19:00", opponent: "Gaziantep FK", home: true, competition: "TSL", score: "1-1", result: "D", htScore: "0-0" },
+            { date: "2026-01-21 22:00", opponent: "Atletico Madrid", home: true, competition: "ŞMP", score: "1-1", result: "D", htScore: "1-1" },
+            { date: "2026-01-24 19:00", opponent: "Karagümrük", home: false, competition: "TSL", score: "1-3", result: "W", htScore: "1-1" },
+            { date: "2026-01-28 22:00", opponent: "Man City", home: false, competition: "ŞMP", score: "2-0", result: "L", htScore: "2-0" },
+            { date: "2026-02-01 19:00", opponent: "Kayserispor", home: true, competition: "TSL", score: "4-0", result: "W", htScore: "2-0" },
+            
+            // Oynanacak maçlar
+            { date: "2026-02-04 20:00", opponent: "İstanbulspor", home: true, competition: "TÜK" },
+            { date: "2026-02-08 19:00", opponent: "Çaykur Rizespor", home: false, competition: "TSL" },
+            { date: "2026-02-13 19:00", opponent: "Eyüpspor", home: true, competition: "TSL" },
+            { date: "2026-02-17 22:00", opponent: "Juventus", home: true, competition: "ŞMP" },
+            { date: "2026-02-22 19:00", opponent: "Konyaspor", home: false, competition: "TSL" },
+            { date: "2026-02-25 22:00", opponent: "Juventus", home: false, competition: "ŞMP" },
+            { date: "2026-03-01 19:00", opponent: "Alanyaspor", home: true, competition: "TSL" },
+            { date: "2026-03-04 20:00", opponent: "Alanyaspor", home: false, competition: "TÜK" },
+            { date: "2026-03-08 19:00", opponent: "Beşiktaş", home: false, competition: "TSL" },
+            { date: "2026-03-15 19:00", opponent: "Başakşehir", home: true, competition: "TSL" },
+            { date: "2026-03-18 19:00", opponent: "Göztepe", home: false, competition: "TSL" },
+            { date: "2026-04-05 19:00", opponent: "Trabzonspor", home: false, competition: "TSL" },
+            { date: "2026-04-12 19:00", opponent: "Kocaelispor", home: true, competition: "TSL" },
+            { date: "2026-04-19 19:00", opponent: "Gençlerbirliği", home: false, competition: "TSL" },
+            { date: "2026-04-26 19:00", opponent: "Fenerbahçe", home: true, competition: "TSL" },
+            { date: "2026-05-03 19:00", opponent: "Samsunspor", home: false, competition: "TSL" },
+            { date: "2026-05-10 19:00", opponent: "Antalyaspor", home: true, competition: "TSL" },
+            { date: "2026-05-17 19:00", opponent: "Kasımpaşa", home: false, competition: "TSL" }
         ];
 
         const competitionNames = {
             "TSL": "Trendyol Süper Lig",
-            "ŞMP": "🏆 UEFA Şampiyonlar Ligi"
+            "ŞMP": "🏆 UEFA Şampiyonlar Ligi",
+            "TÜK": "🏆 Türkiye Kupası",
+            "TSK": "🏆 Türkiye Süper Kupası",
+            "HAZ": "Hazırlık Maçı"
         };
 
         const competitionEmojis = {
             "TSL": "🇹🇷",
-            "ŞMP": "⭐"
+            "ŞMP": "⭐",
+            "TÜK": "🏆",
+            "TSK": "🏆",
+            "HAZ": "⚽"
         };
+
+        function calculateStats() {
+            const playedMatches = allMatches.filter(m => m.score);
+            const wins = playedMatches.filter(m => m.result === 'W').length;
+            const draws = playedMatches.filter(m => m.result === 'D').length;
+            const losses = playedMatches.filter(m => m.result === 'L').length;
+            
+            let goalsFor = 0;
+            let goalsAgainst = 0;
+            
+            playedMatches.forEach(m => {
+                const [home, away] = m.score.split('-').map(Number);
+                if (m.home) {
+                    goalsFor += home;
+                    goalsAgainst += away;
+                } else {
+                    goalsFor += away;
+                    goalsAgainst += home;
+                }
+            });
+            
+            return { played: playedMatches.length, wins, draws, losses, goalsFor, goalsAgainst };
+        }
 
         function updateCountdown() {
             const now = new Date();
             const content = document.getElementById('content');
             const nextMatchesDiv = document.getElementById('nextMatches');
+            const pastResultsDiv = document.getElementById('pastResults');
+            const seasonStatsDiv = document.getElementById('seasonStats');
             
-            const futureMatches = matches.filter(m => new Date(m.date) > now);
+            const futureMatches = allMatches.filter(m => !m.score && new Date(m.date) > now);
+            const pastMatches = allMatches.filter(m => m.score).reverse().slice(0, 10);
+            
+            // Sezon istatistikleri
+            const stats = calculateStats();
+            seasonStatsDiv.innerHTML = `
+                <h3>📊 Sezon İstatistikleri</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">${stats.played}</div>
+                        <div class="stat-label">Maç</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4CAF50;">${stats.wins}</div>
+                        <div class="stat-label">Galibiyet</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #FF9800;">${stats.draws}</div>
+                        <div class="stat-label">Beraberlik</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #f44336;">${stats.losses}</div>
+                        <div class="stat-label">Mağlubiyet</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${stats.goalsFor}</div>
+                        <div class="stat-label">Atılan Gol</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${stats.goalsAgainst}</div>
+                        <div class="stat-label">Yenilen Gol</div>
+                    </div>
+                </div>
+            `;
             
             if (futureMatches.length === 0) {
                 content.innerHTML = '<div class="match-info"><h3>🏆 Sezon Tamamlandı! 🏆</h3><div class="trophy">🏆</div></div>';
@@ -423,9 +646,6 @@
                         <div class="match-details">
                             <strong>${nextMatch.home ? 'GALATASARAY' : nextMatch.opponent} vs ${nextMatch.home ? nextMatch.opponent : 'GALATASARAY'}</strong>
                         </div>
-                        <div style="font-size: 2em; margin-top: 20px;">
-                            🔥 OSIMHEN & ICARDI SAHADA! 🔥
-                        </div>
                         <div class="competition">${competitionNames[nextMatch.competition]}</div>
                     </div>
                 `;
@@ -439,6 +659,7 @@
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
             const isChampionsLeague = nextMatch.competition === 'ŞMP';
+            const isCup = nextMatch.competition === 'TÜK' || nextMatch.competition === 'TSK';
 
             content.innerHTML = `
                 <div class="countdown">
@@ -461,6 +682,7 @@
                 </div>
                 <div class="match-info">
                     ${isChampionsLeague ? '<div class="trophy">🏆</div>' : ''}
+                    ${isCup ? '<div class="trophy">🏆</div>' : ''}
                     <h3>${isChampionsLeague ? '⭐ ' : ''}Bir Sonraki Maç${isChampionsLeague ? ' ⭐' : ''}</h3>
                     <div class="match-details">
                         <strong>${nextMatch.home ? '🏠 GALATASARAY' : '✈️ ' + nextMatch.opponent} - ${nextMatch.home ? nextMatch.opponent : 'GALATASARAY 🦁'}</strong>
@@ -480,7 +702,6 @@
                         })}
                     </div>
                     <div class="competition">${competitionEmojis[nextMatch.competition]} ${competitionNames[nextMatch.competition]}</div>
-                    ${isChampionsLeague ? '<div style="margin-top: 25px; font-size: 2em;">⚽ OSIMHEN & ICARDI ⚽</div>' : ''}
                 </div>
             `;
 
@@ -492,18 +713,47 @@
                     ${upcomingMatches.map(match => {
                         const mDate = new Date(match.date);
                         const isUCL = match.competition === 'ŞMP';
+                        const isCupMatch = match.competition === 'TÜK' || match.competition === 'TSK';
                         return `
-                            <div class="match-item ${isUCL ? 'champions-league' : ''}">
+                            <div class="match-item ${isUCL ? 'champions-league' : ''} ${isCupMatch ? 'cup' : ''}">
                                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                                     <div style="flex: 1; min-width: 200px;">
-                                        <strong style="color: ${isUCL ? '#00B2FF' : '#FDB913'}; font-size: 1.1em;">
+                                        <strong style="color: ${isUCL ? '#00B2FF' : isCupMatch ? '#9C27B0' : '#FDB913'}; font-size: 1.1em;">
                                             ${competitionEmojis[match.competition]} ${match.home ? 'Galatasaray' : match.opponent} vs ${match.home ? match.opponent : 'Galatasaray'}
                                         </strong>
                                     </div>
                                     <div style="text-align: right; margin-top: 5px;">
                                         <div>${mDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${mDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
-                                        <div style="font-size: 0.9em; color: #FDB913; margin-top: 5px;">${competitionNames[match.competition]}</div>
+                                        <div style="font-size: 0.9em; color: ${isUCL ? '#00B2FF' : isCupMatch ? '#9C27B0' : '#FDB913'}; margin-top: 5px;">${competitionNames[match.competition]}</div>
                                     </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+            }
+
+            // Son maç sonuçları
+            if (pastMatches.length > 0) {
+                pastResultsDiv.innerHTML = `
+                    <h3>📜 Son Maç Sonuçları</h3>
+                    ${pastMatches.map(match => {
+                        const mDate = new Date(match.date);
+                        const resultClass = match.result === 'W' ? 'result-win' : match.result === 'D' ? 'result-draw' : 'result-loss';
+                        const gsScore = match.home ? match.score.split('-')[0] : match.score.split('-')[1];
+                        const oppScore = match.home ? match.score.split('-')[1] : match.score.split('-')[0];
+                        return `
+                            <div class="result-item">
+                                <div class="result-teams">
+                                    <span style="color: ${match.competition === 'ŞMP' ? '#00B2FF' : '#FDB913'};">${competitionEmojis[match.competition]}</span>
+                                    <strong>${match.home ? 'Galatasaray' : match.opponent}</strong> - 
+                                    <strong>${match.home ? match.opponent : 'Galatasaray'}</strong>
+                                </div>
+                                <div class="result-score ${resultClass}">
+                                    ${match.home ? gsScore : oppScore} - ${match.home ? oppScore : gsScore}
+                                </div>
+                                <div class="result-date">
+                                    ${mDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                                 </div>
                             </div>
                         `;
@@ -518,4 +768,3 @@
     </script>
 </body>
 </html>
-
